@@ -15,7 +15,6 @@
     .unitTest { width: 10px; background-color: red; color: red; margin: 0px; margin-right: 2px; float: left; }
     .test { margin-bottom: 2px; background-color: green; color: green; }
     /* group of selectors */
-    .unitTest, .test { height: 10px; }
 
     .UI > * { float: left }
     .UI { clear: both; height: auto; padding-top: 6px;}
@@ -246,85 +245,6 @@
 				.replace(/^\s*|\s*$/g, "").split(/\s*{/);
 		}
 
-		var namespaceCheck = {};
-
-		function verifyResolve(ns){
-			if ( namespaceCheck[ns] != null ) {
-		  		namespaceCheck[ns]++;
-			} else if ( ns !== null ) {
-				assert( false, "Unexpected Namespace Resolve: " + ns );
-			}
-		}
-
-		var goodNamespace = [
-			function(ns){
-				verifyResolve(ns);
-				if ( ns === null )
-					return "http://www.w3.org/1999/xhtml";
-				return ({ xHTML: "http://www.w3.org/1999/xhtml", svg: "http://www.w3.org/2000/svg" })[ns];
-			},
-			function(ns){
-				verifyResolve(ns);
-				return ({ xHTML: "http://www.w3.org/1999/xhtml", svg: "http://www.w3.org/2000/svg" })[ns];
-			},
-			function(ns){
-				verifyResolve(ns);
-				if ( ns === null )
-					return "http://www.w3.org/1999/xhtml";
-				return ({ xHTML: {toString: function(){return "http://www.w3.org/1999/xhtml";}},
-					svg: {toString: function(){return "http://www.w3.org/2000/svg";} }})[ns];
-			},
-			function(ns){
-				verifyResolve(ns);
-				return ({ xHTML: {toString: function(){return "http://www.w3.org/1999/xhtml";}},
-					svg: {toString: function(){return "http://www.w3.org/2000/svg";} }})[ns];
-			},
-			{
-				lookupNamespaceURI: function(ns){
-					verifyResolve(ns);
-					if ( ns === null )
-						return "http://www.w3.org/1999/xhtml";
-					return ({ xHTML: "http://www.w3.org/1999/xhtml", svg: "http://www.w3.org/2000/svg" })[ns];
-				}
-			},
-			{
-				lookupNamespaceURI: function(ns){
-					verifyResolve(ns);
-					return ({ xHTML: "http://www.w3.org/1999/xhtml", svg: "http://www.w3.org/2000/svg" })[ns];
-				}
-			},
-			{
-				lookupNamespaceURI: function(ns){
-					verifyResolve(ns);
-					if ( ns === null )
-						return "http://www.w3.org/1999/xhtml";
-					return ({ xHTML: {toString: function(){return "http://www.w3.org/1999/xhtml";}},
-						svg: {toString: function(){return "http://www.w3.org/2000/svg";} }})[ns];
-				}
-			},
-			{
-				lookupNamespaceURI: function(ns){
-					verifyResolve(ns);
-					return ({ xHTML: {toString: function(){return "http://www.w3.org/1999/xhtml";}},
-						svg: {toString: function(){return "http://www.w3.org/2000/svg";} }})[ns];
-				}
-			}
-		];
-
-		var badNamespace = [
-			{},
-			null,
-			undefined,
-			function(){},
-			function(){ return ""; },
-			function(){ return null; },
-			function(){ throw {message: "bad ERROR"} },
-			{ lookupNamespaceURI: function(){} },
-			{ lookupNamespaceURI: function(){ return ""; } },
-			{ lookupNamespaceURI: function(){ return null; } },
-			{ lookupNamespaceURI: function(){ throw {message: "bad ERROR"}; } }
-		];
-
 		interfaceCheck(root, "Element");
 		runTest( css, "Element", root, true );
 		check( "Inside Element", root, true, false );
@@ -550,64 +470,21 @@
 				if ( restrict === false && root != document )
 					return;
 
-				var namespaced = /\|[^=]/.test( q );
-				var prepend = namespaced ? "xHTML|*#root3 " : "#root3 ";
+				var prepend = "#root3 ";
 				q = (restrict === false || restrict === ":root" ? "" : prepend) + q.replace(/,/g, ", " + prepend);
 				var nq = q.replace(/>/g, "&gt;").replace(/</g, "&lt;");
 
-				if ( namespaced ) {
-					for ( var i = 0; i < goodNamespace.length; i++ ) {
-						var resolver = goodNamespace[i], pass = false, results = null;
-						var spaces = q.replace(/(^|\s)(?:([^| ]+)\||())\S*/g, "$1$2$3")
-							.replace(/(^\*\s*|\s*\*$)/g, "").replace(/ [*>+] /g, " ").split(/\s+/).reverse();
+				var pass = false;
 
-						namespaceCheck = {};
-						for ( var s = 0; s < spaces.length; s++ ) {
-							if ( spaces[s] !== "*" ) {
-								namespaceCheck[ spaces[s] || null ] = 0;
-							}
-						}
-
-						try {
-							results = query(q, resolver);
-							pass = hasPassed( results, (ids2 && i % 2 === 0 ? ids2 : ids) );
-						} catch(e) {
-							pass = false;
-						}
-
-						assert( pass, type + ": " + name + " Good Resolver #" + (i+1) + " (" + nq + ")" +
-							(pass ? "" : " Expected: " + extra(ids) + " Received: " + extra(results)) );
-
-						for ( var n in namespaceCheck ) {
-							assert( namespaceCheck[n] != 0, "Namespaces Resolved: " + n );
-						}
-					}
-
-					for ( var i = 0; i < badNamespace.length; i++ ) {
-						var resolver = badNamespace[i], pass = false, results = null;
-
-						try {
-							results = query(q, resolver);
-						} catch(e) {
-							pass = (e.message === "bad ERROR" || e.code == DOMException.NAMESPACE_ERR);
-						}
-
-						assert( pass, type + ": " + name + " Bad Resolver #" + (i+1) + " (" + nq + ")" + 
-							(pass ? "" : " Expected: " + extra(ids) + " Received: " + extra(results)) );
-					}
-				} else {
-					var pass = false;
-
-					try {
-						var results = query(q);
-						pass = hasPassed( results, ids );
-					} catch(e) {
+				try {
+					var results = query(q);
+					pass = hasPassed( results, ids );
+				} catch(e) {
 				  	pass = e.code == DOMException.SYNTAX_ERR;
-					}
-	
-					assert( pass, type + ": " + name + " (" + nq + ")" +
-						(pass ? "" : " Expected: " + extra(ids) + " Received: " + extra(results)) );
 				}
+	
+				assert( pass, type + ": " + name + " (" + nq + ")" +
+					(pass ? "" : " Expected: " + extra(ids) + " Received: " + extra(results)) );
 
 				function hasPassed(results, ids){
 					var pass = (results && results.length == ids.length) || (!results && !ids);
@@ -637,27 +514,6 @@
 					return extra;
 				}
 			}
-
-			t( "SVG", "*|svg", ["svg1","svg2","svg3"] );
-			t( "SVG", "svg|svg", ["svg2","svg3"] );
-			t( "SVG", "svg|svg *|circle", ["circle2","circle3"] );
-			t( "SVG", "svg|svg svg|circle", ["circle2","circle3"] );
-			t( "SVG", "xHTML|div *|svg", ["svg1","svg2","svg3"] );
-			t( "SVG", "div svg|svg", ["svg2","svg3"] );
-			t( "SVG", "xHTML|div svg|svg", ["svg2","svg3"] );
-			t( "SVG", "xHTML|div svg|svg *|circle", ["circle2","circle3"] );
-			t( "SVG", "xHTML|div svg *|circle", ["circle1","circle2","circle3"], true, ["circle1"] );
-			t( "SVG", "xHTML|div svg|svg svg|circle", ["circle2","circle3"] );
-
-			t( "Element Selector", "xHTML|p", ["firstp","ap","sndp","en","sap","first"] );
-			t( "Parent Element", "xHTML|div p", ["firstp","ap","sndp","en","sap","first"] );
-			t( "Parent Element", "xHTML|div xHTML|p", ["firstp","ap","sndp","en","sap","first"] );
-			t( "Parent Element", "*|div xHTML|p", ["firstp","ap","sndp","en","sap","first"] );
-			t( "Parent Element", "*|div *|p", ["firstp","ap","sndp","en","sap","first"] );
-			t( "Child", "xHTML|p > xHTML|a", ["simon1","google","groups","mark","yahoo","simon"] );
-			t( "Adjacent", "xHTML|a + xHTML|a", ["groups"] );
-			t( "Adjacent", "xHTML|a + a", ["groups"] );
-			t( "Nth-child", "xHTML|*#form xHTML|*#select1 xHTML|option:nth-child(3)", ["option1c"] );
 
 			var all = query("*");
 			assert( all && all.length > 30, type + ": Select all" );
@@ -1294,7 +1150,7 @@
 		<div id="nothiddendivchild"></div>
 	</div>
 	<!-- this iframe is outside the #main so it won't reload constantly wasting time, but it means the tests must be "safe" and clean up after themselves -->
-	<iframe id="loadediframe" name="loadediframe" style="display:none;" src="data/iframe.html"></iframe>
+	<iframe id="loadediframe" name="loadediframe" style="display:none;"></iframe>
 	<dl id="dl" style="display:none;">
 	<div id="main" style="display: none;">
 		<p id="firstp">See <a id="simon1" href="http://simon.incutio.com/archive/2003/03/25/#getElementsBySelector" rel="bookmark">this blog entry</a> for more information.</p>
