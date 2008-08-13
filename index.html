@@ -33,6 +33,8 @@
     .lastOfType > p { background-color: red }
     .empty > .isEmpty { color: red; }
     html { background-color: red; }
+
+    html.nopass .pass { display: none; }
   </style>
   <style type="text/test" id="test">
     /* :target selector */
@@ -222,6 +224,10 @@
   </style>
   <script>
 	window.onload = function(){
+		document.getElementById("toggle").onclick = function(){
+			document.documentElement.className = this.checked ? "unitTest nopass" : "unitTest";
+		};
+
 		if ( window.location.hash.indexOf("target") == -1 )
 			window.location.hash = "#target";
 
@@ -299,6 +305,7 @@
 
 			for ( var i = 0; i < results.length; i++ ) {
 				var li = document.createElement("li");
+				li.className = (results[i][0] === "FAIL" ? "fail" : "pass");
 				var span = document.createElement("span");
 				span.style.color = (results[i][0] === "FAIL" ? "red" : "green");
 				span.appendChild( document.createTextNode( results[i][0] ) );
@@ -695,6 +702,7 @@
 <body id="body" class="unitTest" title="childhood and element type selectors">
 <h1><a href="http://www.w3.org/TR/selectors-api/">Selectors API</a> Test Suite</h1>
 <p>Testrunner by <a href="http://ejohn.org/">John Resig</a>, tests by <a href="http://ejohn.org/">John Resig</a>, <a href="http://disruptive-innovations.com/zoo/css3tests/selectorTest.html">Disruptive Innovations</a>, <a href="http://www.w3.org/Style/CSS/Test/CSS3/Selectors/20060307/html/index.html">W3C CSS Working Group</a>, <a href="http://jquery.com/test/">jQuery JavaScript Library</a>.</p>
+<p><input type="checkbox" id="toggle"/> Show only failing tests.</p>
 <div id="root">
   <div class="header">
     <h3>CSS 3 Selectors tests</h3>
