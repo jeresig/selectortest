@@ -1,8 +1,7 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:svg="http://www.w3.org/2000/svg"
-  xml:lang="en" lang="en" dir="ltr" id="html" class="unitTest" title=":root selector">
+<!DOCTYPE html>
+<html lang="en" dir="ltr" id="html" class="unitTest" title=":root selector">
 <head>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>selectorTest</title>
   <!-- (c) Disruptive Innovations 2008 -->
   <style type="text/css">
@@ -35,7 +34,7 @@
     .empty > .isEmpty { color: red; }
     html { background-color: red; }
   </style>
-  <style type="text/test" id="test"><![CDATA[
+  <style type="text/test" id="test">
     /* :target selector */
     .target :target { background-color: lime; }
 
@@ -190,7 +189,7 @@
     .plus .t1, .plus .t2 { background-color: white; }
     .plus .t1 + .unitTest + .unitTest { background-color: lime; }
     .plus .t1:hover + .unitTest + .unitTest { background-color: red; }
-  ]]></style>
+  </style>
   <style type="text/test" id="error">
     .blox16:not(.blox15[foo="blox14"]) { background-color: red; }
 
@@ -221,7 +220,7 @@
     .foo..quux { background: red; color: yellow; }
     .bar. { background: red; color: yellow; }
   </style>
-  <script><![CDATA[
+  <script>
 	window.onload = function(){
 		if ( window.location.hash.indexOf("target") == -1 )
 			window.location.hash = "#target";
@@ -691,7 +690,7 @@
 			t( "Not", "a.blog:not(.link)", ["mark"] );
 		}
 	};
-  ]]></script>
+  </script>
 </head>
 <body id="body" class="unitTest" title="childhood and element type selectors">
 <h1><a href="http://www.w3.org/TR/selectors-api/">Selectors API</a> Test Suite</h1>
