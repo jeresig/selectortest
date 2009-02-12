@@ -238,13 +238,15 @@
 		var tests = 0, passed = 0;
 		var cache = {};
 
-		var css = document.getElementById("test").firstChild.nodeValue.split("\n");
+		var cssElem = document.getElementById("test");
+		var css = (cssElem.innerHTML || cssElem.textContent || cssElem.innerText).split("\n");
 		for ( var i = 0; i < css.length; i++ ) {
 			css[i] = css[i].replace(/\/\*.*?\*\//g, "")
 				.replace(/^\s*|\s*$/g, "").split(/\s*{/);
 		}
 
-		var ecss = document.getElementById("error").firstChild.nodeValue.split("\n");
+		var ecssElem = document.getElementById("error");
+		var ecss = (ecssElem.innerHTML || ecssElem.textContent || ecssElem.innerText).split("\n");
 		for ( var i = 0; i < ecss.length; i++ ) {
 			ecss[i] = ecss[i].replace(/\/\*.*?\*\//g, "")
 				.replace(/^\s*|\s*$/g, "").split(/\s*{/);
@@ -340,19 +342,19 @@
 			var pass = false;
 			try {
 				root.querySelectorAll("");
-			} catch(e){ pass = e.code == DOMException.SYNTAX_ERR; }
+			} catch(e){ pass = typeof DOMException !== "undefined" && e.code == DOMException.SYNTAX_ERR; }
 			assert( pass, type + ".querySelectorAll Empty String" );
 
 			pass = false;
 			try {
 				root.querySelectorAll(null);
-			} catch(e){ pass = e.code == DOMException.SYNTAX_ERR; }
+			} catch(e){ pass = typeof DOMException !== "undefined" && e.code == DOMException.SYNTAX_ERR; }
 			assert( pass, type + ".querySelectorAll null" );
 
 			pass = false;
 			try {
 				root.querySelectorAll(undefined);
-			} catch(e){ pass = e.code == DOMException.SYNTAX_ERR; }
+			} catch(e){ pass = typeof DOMException !== "undefined" && e.code == DOMException.SYNTAX_ERR; }
 			assert( pass, type + ".querySelectorAll undefined" );
 
 			pass = false;
@@ -365,19 +367,19 @@
 			var pass = false;
 			try {
 				root.querySelector("");
-			} catch(e){ pass = e.code == DOMException.SYNTAX_ERR; }
+			} catch(e){ pass = typeof DOMException !== "undefined" && e.code == DOMException.SYNTAX_ERR; }
 			assert( pass, type + ".querySelector Empty String" );
 
 			pass = false;
 			try {
 				root.querySelector(null);
-			} catch(e){ pass = e.code == DOMException.SYNTAX_ERR; }
+			} catch(e){ pass = typeof DOMException !== "undefined" && e.code == DOMException.SYNTAX_ERR; }
 			assert( pass, type + ".querySelector null" );
 
 			pass = false;
 			try {
 				root.querySelector(undefined);
-			} catch(e){ pass = e.code == DOMException.SYNTAX_ERR; }
+			} catch(e){ pass = typeof DOMException !== "undefined" && e.code == DOMException.SYNTAX_ERR; }
 			assert( pass, type + ".querySelector undefined" );
 
 			pass = false;
@@ -403,7 +405,7 @@
 
 						assert(expect && pass, type + ".querySelectorAll: " + query);
 					} catch(e){
-						var pass = !expect && e.code == DOMException.SYNTAX_ERR || false;
+						var pass = !expect && typeof DOMException !== "undefined" && e.code == DOMException.SYNTAX_ERR || false;
 						assert(pass, type + ".querySelectorAll: " + query);
 					}
 
@@ -426,27 +428,41 @@
 
 						assert(expect, type + ".querySelector: " + query);
 					} catch(e){
-						var pass = !expect && e.code == DOMException.SYNTAX_ERR || false;
+						var pass = !expect && typeof DOMException !== "undefined" && e.code == DOMException.SYNTAX_ERR || false;
 						assert(pass, type + ".querySelector: " + query);
 					}
 				}
 			}
 		}
 
-		function check( type, root, expect, fragment ){
-			var walker = document.createTreeWalker( root, NodeFilter.SHOW_ELEMENT, { acceptNode: function(){ return 1; } }, false );
 
-			while ( walker.nextNode() ) {
-				var div = walker.currentNode;
+		function check( type, root, expect, fragment ){
+			traverse( root, function(div){
 				if ( (div.getAttribute("class") || "").toString().indexOf("unitTest") > -1 &&
 						(!fragment || div.getAttribute("id") !== "nofragment") ) {
-				  //var bg = div.style.backgroundColor;
-					var view = document.defaultView.getComputedStyle(div, null);
-					var bg = view.getPropertyValue("background-color") || div.style.backgroundColor;
+					var bg;
+
+					if ( document.defaultView ) {
+						var view = document.defaultView.getComputedStyle(div, null);
+						bg = view.getPropertyValue("background-color") || div.style.backgroundColor;
+					} else if ( div.currentStyle ) {
+						bg = div.currentStyle.backgroundColor || div.style.backgroundColor;
+					}
 
 					var pass = bg && bg.indexOf("(255, 0, 0") == -1 && bg.indexOf("#ff0000") == -1 && bg.indexOf("red") == -1;
-					//var pass = bg && bg.indexOf("(255, 0, 0") == -1 && bg.indexOf("#ff0000") == -1;
 					assert(pass === expect, type + ": " + (div.title || div.parentNode.title));
+				}
+			});
+		}
+
+		function traverse( elem, fn ) {
+			if ( elem.nodeType === 1 ) {
+				fn( elem );
+
+				elem = elem.firstChild;
+				while ( elem ) {
+					traverse( elem, fn );
+					elem = elem.nextSibling;
 				}
 			}
 		}
@@ -464,8 +480,8 @@
 				try {
 					return root[select](q, resolver);
 				} catch(e){
-				  if ( e.message.indexOf("ERR") > -1 || e.code == DOMException.NAMESPACE_ERR ||
-							e.code == DOMException.SYNTAX_ERR)
+				  if ( e.message.indexOf("ERR") > -1 || typeof DOMException !== "undefined" && e.code == DOMException.NAMESPACE_ERR ||
+							typeof DOMException !== "undefined" && e.code == DOMException.SYNTAX_ERR)
 						throw e;
 				}
 			}
@@ -486,7 +502,7 @@
 					var results = query(q);
 					pass = hasPassed( results, ids );
 				} catch(e) {
-				  	pass = e.code == DOMException.SYNTAX_ERR;
+				  	pass = typeof DOMException !== "undefined" && e.code == DOMException.SYNTAX_ERR;
 				}
 	
 				assert( pass, type + ": " + name + " (" + nq + ")" +
@@ -540,7 +556,8 @@
 			}
 
 			if ( root.parentNode || root == document ) {
-				assert( query(":root *").length == query("*").length - (root == document ? 1 : 0), type + ": :root All Selector" );
+				var rootQuery = query(":root *");
+				assert( rootQuery && rootQuery.length == query("*").length - (root == document ? 1 : 0), type + ": :root All Selector" );
 			}
 
 			t( "Element Selector", "p", ["firstp","ap","sndp","en","sap","first"] );
