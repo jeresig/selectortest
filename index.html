@@ -196,7 +196,7 @@
     .blox16:not(.blox15[foo="blox14"]) { background-color: red; }
 
     /* Tests from http://www.w3.org/Style/CSS/Test/CSS3/Selectors/20060307/html/index.html */
-    div:not(:not(div)) { background-color : red }
+    div:not(:not(div)) { background: red; }
 
     div, { background: red; }
     .5cm { background: red; }
@@ -347,14 +347,14 @@
 
 			pass = false;
 			try {
-				root.querySelectorAll(null);
-			} catch(e){ pass = typeof DOMException !== "undefined" && e.code == DOMException.SYNTAX_ERR; }
+				pass = root.querySelectorAll(null).length === 0;
+			} catch(e){ pass = false; }
 			assert( pass, type + ".querySelectorAll null" );
 
 			pass = false;
 			try {
-				root.querySelectorAll(undefined);
-			} catch(e){ pass = typeof DOMException !== "undefined" && e.code == DOMException.SYNTAX_ERR; }
+				pass= root.querySelectorAll(undefined).length === 0;
+			} catch(e){ pass = false; }
 			assert( pass, type + ".querySelectorAll undefined" );
 
 			pass = false;
@@ -372,14 +372,14 @@
 
 			pass = false;
 			try {
-				root.querySelector(null);
-			} catch(e){ pass = typeof DOMException !== "undefined" && e.code == DOMException.SYNTAX_ERR; }
+				pass = root.querySelector(null) === null;
+			} catch(e){ pass = false; }
 			assert( pass, type + ".querySelector null" );
 
 			pass = false;
 			try {
-				root.querySelector(undefined);
-			} catch(e){ pass = typeof DOMException !== "undefined" && e.code == DOMException.SYNTAX_ERR; }
+				pass = root.querySelector(undefined) === null;
+			} catch(e){ pass = false; }
 			assert( pass, type + ".querySelector undefined" );
 
 			pass = false;
