@@ -293,8 +293,12 @@
 			assert( q, type + " supports querySelector" );
 			var qa = typeof obj.querySelectorAll === "function";
 			assert( qa, type + " supports querySelectorAll" );
-			var ma = typeof obj.matchesSelector === "function";
-			assert( ma, type + " supports matchesSelector" );
+
+			if ( obj.nodeType === 1 ) {
+				var ma = typeof obj.matchesSelector === "function";
+				assert( ma, type + " supports matchesSelector" );
+			}
+
 			return q && qa;
 		}
 
