@@ -293,6 +293,8 @@
 			assert( q, type + " supports querySelector" );
 			var qa = typeof obj.querySelectorAll === "function";
 			assert( qa, type + " supports querySelectorAll" );
+			var ma = typeof obj.matchesSelector === "function";
+			assert( ma, type + " supports matchesSelector" );
 			return q && qa;
 		}
 
@@ -389,6 +391,33 @@
 			} catch(e){ pass = true; }
 			assert( pass, type + ".querySelector no value" );
 
+			if ( root.nodeType === 1 ) {
+				var pass = false;
+				try {
+					root.matchesSelector("");
+				} catch(e){ pass = typeof DOMException !== "undefined" && e.code == DOMException.SYNTAX_ERR; }
+				assert( pass, type + ".matchesSelector Empty String" );
+
+				pass = false;
+				try {
+					pass = root.matchesSelector(null) === null;
+				} catch(e){ pass = false; }
+				assert( pass, type + ".matchesSelector null" );
+
+				pass = false;
+				try {
+					pass = root.matchesSelector(undefined) === null;
+				} catch(e){ pass = false; }
+				assert( pass, type + ".matchesSelector undefined" );
+
+				pass = false;
+				try {
+					if ( root.matchesSelector )
+						root.matchesSelector();
+				} catch(e){ pass = true; }
+				assert( pass, type + ".matchesSelector no value" );
+			}
+
 			for ( var i = 0; i < css.length; i++ ) {
 				var test = css[i];
 				if ( test.length == 2 ) {
@@ -430,6 +459,20 @@
 					} catch(e){
 						var pass = !expect && typeof DOMException !== "undefined" && e.code == DOMException.SYNTAX_ERR || false;
 						assert(pass, type + ".querySelector: " + query);
+					}
+
+					if ( root.nodeType === 1 ) {
+						try {
+							var single = root.matchesSelector(query);
+
+							var pass = found.length === 0 && single === false ||
+								found.length && found === true;
+
+							assert(expect, type + ".matchesSelector: " + query);
+						} catch(e){
+							var pass = !expect && typeof DOMException !== "undefined" && e.code == DOMException.SYNTAX_ERR || false;
+							assert(pass, type + ".matchesSelector: " + query);
+						}
 					}
 				}
 			}
